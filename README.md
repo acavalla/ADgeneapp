@@ -1,4 +1,4 @@
-# ADgeneapp
+# AD gene shiny app
 
 App to indicate genes' significance in Alzheimer disease or in microglial cell identity. 
 

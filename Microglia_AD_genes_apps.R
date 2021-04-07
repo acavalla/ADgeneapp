@@ -35,14 +35,11 @@ for (i in 1:length(file.names)){
 }
 
 ##round to two sig figs
-print(allgenes[1,1])
 allgenes[,7:8] <- allgenes[,7:8] %>%
   mutate_if(is.numeric, signif, digits = 3)
 colnames(allgenes) <- gsub("\\_", " ", colnames(allgenes))
 allgenes$"Paper title" <- paste0("<a href='",allgenes$Link,"' target='_blank'>",allgenes$"Paper title","</a>")
-print(colnames(allgenes))
 allgenes$Log2FC <- gsub("#VALUE!", "Inf", allgenes$Log2FC)
-print("line44")
 allgenes <- allgenes[order(as.character(allgenes$Gene), allgenes$Year),]
 allgenes$Gene <- trimws(as.character(allgenes$Gene))
 allgenes <- unique(allgenes)

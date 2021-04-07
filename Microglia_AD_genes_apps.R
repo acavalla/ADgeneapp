@@ -19,10 +19,10 @@ library(ggplot2)
 library(ggrepel)
 
 ##load csvs of data and amalgamate
-file.names <- c("\\\\ye2svr02\\Erlwood_NTEG\\CavallaA\\Microglia\\bigsevenmicrog.txt",
-                "\\\\ye2svr02\\Erlwood_NTEG\\Psychiatric Genetics\\Projects\\Phago\\bigseven.txt",
-                "\\\\ye2svr02\\Erlwood_NTEG\\CavallaA\\Microglia\\othersources.txt",
-                "\\\\ye2svr02\\Erlwood_NTEG\\Psychiatric Genetics\\Projects\\Phago\\extras.txt")
+file.names <- c("./microgBigSeven.tsv",
+                "./Big_Seven.tsv",
+                "./othersources.tsv",
+                "./extras.tsv")
 for (i in 1:length(file.names)){
   x <- read.csv(file.names[[i]], sep="\t", row.names = NULL, stringsAsFactors = FALSE)
   if(i == 1){
@@ -35,12 +35,14 @@ for (i in 1:length(file.names)){
 }
 
 ##round to two sig figs
-
-allgenes[,7:8] <- allgenes[,7:8] %>% 
+print(allgenes[1,1])
+allgenes[,7:8] <- allgenes[,7:8] %>%
   mutate_if(is.numeric, signif, digits = 3)
 colnames(allgenes) <- gsub("\\_", " ", colnames(allgenes))
 allgenes$"Paper title" <- paste0("<a href='",allgenes$Link,"' target='_blank'>",allgenes$"Paper title","</a>")
-allgenes$LogFC <- gsub("#VALUE!", "Inf", allgenes$LogFC)
+print(colnames(allgenes))
+allgenes$Log2FC <- gsub("#VALUE!", "Inf", allgenes$Log2FC)
+print("line44")
 allgenes <- allgenes[order(as.character(allgenes$Gene), allgenes$Year),]
 allgenes$Gene <- trimws(as.character(allgenes$Gene))
 allgenes <- unique(allgenes)
@@ -52,11 +54,11 @@ rownames(allgenes) <- 1:nrow(allgenes)
 extras <- allgenes[!grepl("Kunkle|Ellis|Levey|Lancour|Marioni|Galatro|Jansen", allgenes$Author),1:4]
 
 #Kelley radar plots data
-noma <- read.csv("\\\\ye2svr02\\Erlwood_NTEG\\CavallaA\\Microglia\\All_kelley.txt", sep="\t")
+noma <- read.csv("All_kelley.tsv", sep="\t")
 
 #Load cano data
-cano <- read.csv("\\\\ye2svr02\\Erlwood_NTEG\\CavallaA\\Microglia\\galatro_diffex.txt", sep="\t", row.names = NULL, stringsAsFactors = FALSE)
-cano <- cano[,c(2,12,13)]
+cano <- read.csv("cano.txt", sep="\t", row.names = NULL, stringsAsFactors = FALSE)
+cano <- cano[,c(2,4,6)]
 
 # logifySlider javascript function
 JS.logify <-
@@ -92,14 +94,14 @@ logifySlider('log_slider2', sci = true)
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   useShinyjs(),
-  
+
   # Application title
   tabsetPanel(
     tabPanel("Dropdown list",
              titlePanel("Alzheimer Disease Genes"),
-             
+
              # Show a plot of the generated distribution
-             
+
              verticalLayout(selectizeInput("gene",
                                            "Select gene of interest",
                                            choices = allgenes$Gene,
@@ -125,7 +127,7 @@ ui <- fluidPage(
                          textOutput("resOlah"),
                          uiOutput("sigOlah"),
                          cellArgs = list(style='white-space: normal;')),
-             
+
              h1("genetics"),
              splitLayout(cellWidths = c("17%", "3%", "20%", "10%", "17%", "3%", "20%", "10%"),
                          HTML("study"),
@@ -167,7 +169,7 @@ ui <- fluidPage(
                          HTML(""),
                          HTML(""),
                          cellArgs = list(style='white-space: normal;')),
-             
+
              tags$head(tags$script(HTML(JS.logify))),
              tags$head(tags$script(HTML(JS.onload))),
              br(),
@@ -188,7 +190,7 @@ ui <- fluidPage(
                    verbatimTextOutput("text")
                )
              ),
-             #conditionalPanel(condition = "cano[cano$Gene.Symbol==input.gene,]) > 0",
+             #conditionalPanel(condition = "cano[cano$Gene.Symbol.x==input.gene,]) > 0",
              plotOutput("cano")),
     tabPanel("Text input",
              textInput("textgene", "Paste (or type) gene list", ""),
@@ -245,9 +247,9 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
-  
+
   #### --- IN TAB 1 --- ####
-  
+
   ### Is selected gene present in any of the seven specified papers?
   ### ["&#x2715;" is the cross; "&#x2713;" the tick]
   output$booGal <- renderText({
@@ -271,7 +273,7 @@ server <- function(input, output, session) {
   output$booJans <- renderText({
     ifelse(nrow(allgenes[grepl("Jansen", allgenes$Author) & allgenes$Gene == input$gene,])==0, "&#x2715;", "&#x2713;")
   })
-  
+
   ### What are the results for selected gene, if present?
   output$resGal <- renderText({
     req(nrow(allgenes[grepl("Galatro", allgenes$Author) & allgenes$Gene == input$gene,]) > 0)
@@ -282,7 +284,7 @@ server <- function(input, output, session) {
            "; P = ",
            allgenes[grepl("Galatro", allgenes$Author) & allgenes$Gene == input$gene, 8])
   })
-  
+
   output$resOlah <- renderText({
     req(nrow(allgenes[grepl("Ellis", allgenes$Author) & allgenes$Gene == input$gene,]) > 0)
     paste0("RPKM = ",
@@ -292,7 +294,7 @@ server <- function(input, output, session) {
            "; P = ",
            allgenes[grepl("Ellis", allgenes$Author) & allgenes$Gene == input$gene, 8])
   })
-  
+
   output$resIgapMagma <- renderText({
     req(nrow(allgenes[grepl("Levey", allgenes$Author) & allgenes$Gene == input$gene,]) > 0)
     paste0("P = ",
@@ -318,7 +320,7 @@ server <- function(input, output, session) {
     paste0("P = ",
            allgenes[grepl("Jansen", allgenes$Author) & allgenes$Gene == input$gene, 8])
   })
-  
+
   ### Are selected gene's results significant?
   output$sigGal <- renderText({
     ifelse(nrow(allgenes[grepl("Galatro", allgenes$Author) & allgenes$Gene == input$gene & allgenes$P <= 10^input$p & allgenes$LogFC>=input$FC,])==0, "&#x2715;", "&#x2713;")
@@ -338,10 +340,10 @@ server <- function(input, output, session) {
   output$sigJans <- renderText({
     ifelse(nrow(allgenes[grepl("Jansen", allgenes$Author) & allgenes$Gene == input$gene & allgenes$P <= 10^input$p & allgenes$LogFC>=input$FC,])==0, "&#x2715;", "&#x2713;")
   })
-  
-  ### If it's not present in the specified papers, why is it in the database? 
+
+  ### If it's not present in the specified papers, why is it in the database?
   ### (Sometimes-present larger table of where evidence is found)
-  
+
   output$selectedgene <- DT::renderDataTable({
     req(nrow(extras[extras$Gene==input$gene,]) > 0)
     selectedgene <- extras[extras$Gene == input$gene,]
@@ -358,10 +360,10 @@ server <- function(input, output, session) {
                   )), dom='t',bPaginate=FALSE)
     )
   })
-  
+
   ### Radar plot
   #output$rplotboo <- nrow(noma[noma$Gene==input$gene,])
-  
+
   output$radarPlot <- renderPlot({
     req(nrow(noma[noma$Gene==input$gene,]) > 0)
     a <- noma[noma$Gene==input$gene,]
@@ -369,7 +371,7 @@ server <- function(input, output, session) {
     # fmsb requires max and min of each category
     a <- rbind(rep(200, ncol(a)) , rep(0, ncol(a)) , a)
     labels <- gsub("_.*","", colnames(a))
-    
+
     sizes <- as.data.frame(sort(a[3,]))
     sizes[1:3] <- 1
     sizes[4] <- 1.5
@@ -382,7 +384,7 @@ server <- function(input, output, session) {
                        ifelse(sizes[2] != 1, rgb(0.960, 0.768, 0.619, alpha = 0.6),
                               ifelse(sizes[3]!=1, rgb(0.650, 0.929, 0.807, alpha = 0.6),
                                      rgb(0.949, 0.827, 0.972, alpha = 0.6))))
-    
+
     radarchart(a,
                axistype = 4 ,
                #custom polygon
@@ -398,26 +400,26 @@ server <- function(input, output, session) {
                cglwd = 0.8,
                vlabels = labels,
                vlcex = sizes)
-    
+
   })
-  
-  ##Kelley data 
+
+  ##Kelley data
   output$mytext <- renderUI({
     mylist <- c("", "", "", "", "", "", "", "", "", "", "", "Is the gene in the top 50 of the Kelley data?")
     HTML(paste(mylist, sep = "", collapse = '<br/>'))
   })
-  
+
   output$booKel <- renderUI({
     x <- ifelse(nrow(allgenes[grepl("Kelley", allgenes$Author) & allgenes$Gene == input$gene,])==0, "&#x2715;", "&#x2713;")
     mylist <- c("", "", "", "", "", "", "", "", "", "", "", x)
     HTML(paste(mylist, sep = "", collapse = '<br/>'))
   })
-  
+
   ### Explanatory radar plot button
   observeEvent(input$button, {
     toggle('text_div')
     output$text <- renderText({"The radar plots are created by the data reported by Kelley et al (2018), which is presented at http://oldhamlab.ctec.ucsf.edu/. The axes represent a 'fidelity score', another name for a Z-score, which is defined as the number of standard deviations a data point is from the mean, which is calculated over all brain tissue. A z-score of a gene of 150 in microglia would therefore represent an upregulation of 150 standard deviations over the mean for this gene in microglia in combined brain tissue."})
-    
+
     if (input$button %% 2 == 1) {
       txt <- "Hide"
     } else {
@@ -425,24 +427,24 @@ server <- function(input, output, session) {
     }
     updateActionButton(session, "button", label = txt)
   })
-  
+
   ### Volcano plot
-  #output$canplotboo <- nrow(cano[cano$Gene.Symbol==input$gene,])
-  
+  #output$canplotboo <- nrow(cano[cano$Gene.Symbol.x==input$gene,])
+
   output$cano <- renderPlot({
-    req(nrow(cano[cano$Gene.Symbol==input$gene,]) > 0)
-    cano<-cano%>%mutate(threshold = ifelse(abs(glia.brain_logFC)>=input$FC & P.Value<=10^input$p, "A",
-                                           ifelse(abs(glia.brain_logFC)>=input$FC, "B",
+    req(nrow(cano[cano$Gene.Symbol.x==input$gene,]) > 0)
+    cano<-cano%>%mutate(threshold = ifelse(abs(glia.brain_logFC.y)>=input$FC & P.Value<=10^input$p, "A",
+                                           ifelse(abs(glia.brain_logFC.y)>=input$FC, "B",
                                                   ifelse(P.Value<=10^input$p, "C", "D"))))
-    
-    cano<-cano%>%mutate(callit = ifelse(cano$Gene.Symbol==input$gene, as.character(Gene.Symbol), ""))
-    cano<-cano%>%mutate(size = ifelse(cano$Gene.Symbol==input$gene, 3, 1))
-    
-    cano[cano$Gene.Symbol==input$gene, 4] <- ifelse(abs(cano[cano$Gene.Symbol==input$gene, 2])>=1 & cano[cano$Gene.Symbol==input$gene, 3]<=10^input$p, "B",
-                                                    ifelse(abs(cano[cano$Gene.Symbol==input$gene, 2])>=input$FC, "C",
-                                                           ifelse(cano[cano$Gene.Symbol==input$gene, 3]<=10^input$p, "D", "A")))
-    
-    ggplot(cano, aes(x=glia.brain_logFC, y=-log10(P.Value), label = callit)) +
+
+    cano<-cano%>%mutate(callit = ifelse(cano$Gene.Symbol.x==input$gene, as.character(Gene.Symbol.x), ""))
+    cano<-cano%>%mutate(size = ifelse(cano$Gene.Symbol.x==input$gene, 3, 1))
+
+    cano[cano$Gene.Symbol.x==input$gene, 4] <- ifelse(abs(cano[cano$Gene.Symbol.x==input$gene, 2])>=1 & cano[cano$Gene.Symbol.x==input$gene, 3]<=10^input$p, "B",
+                                                    ifelse(abs(cano[cano$Gene.Symbol.x==input$gene, 2])>=input$FC, "C",
+                                                           ifelse(cano[cano$Gene.Symbol.x==input$gene, 3]<=10^input$p, "D", "A")))
+
+    ggplot(cano, aes(x=glia.brain_logFC.y, y=-log10(P.Value), label = callit)) +
       geom_point(aes(color = threshold), alpha=0.4, size=cano$size) +
       scale_colour_manual(values = c("A"= "green", "B"="red",  "C"="blue", "D"= "black")) +
       xlab("log fold change") + ylab("-log10 p-value") +
@@ -459,7 +461,7 @@ server <- function(input, output, session) {
   })
 
   #### --- IN TAB 2 --- ####
-  
+
   ##counting the rows in the input file or text
   text_row <- reactive({
     #req(length(input$caption) != 0)
@@ -469,7 +471,7 @@ server <- function(input, output, session) {
     y <- merge(allgenes, tmp)
     return (list(length(unique(tmp$Gene)), length(unique(y$Gene))))
     })
-  
+
   ##textoutput of number of genes in list found in papers
   output$totalnrowtext <- renderText({
     #req(length(text_row) > 1)
@@ -479,8 +481,8 @@ server <- function(input, output, session) {
       paste0(text_row()[[2]], " (of your list of ", text_row()[[1]], ") genes are related to microglia or Alzheimer disease")
     }
   })
-  
-  
+
+
   ###upload file and compare to database
   output$tab2table <- DT::renderDataTable({
     if(input$textgene=="") {
@@ -489,14 +491,14 @@ server <- function(input, output, session) {
     x <- as.data.frame(strsplit(input$textgene, " "))
     colnames(x) <- "Gene"
     x$Gene <- toupper(x$Gene)
-    y <- merge(allgenes, x, 
+    y <- merge(allgenes, x,
                all.y = TRUE
     )
     y <- y[,1:4]
-  
+
     y$`Paper title`[is.na(y$`Paper title`)] <- "No known link"
     y[is.na(y)] <- ""
-    
+
     DT::datatable(data = y, rownames= FALSE,
                   escape = FALSE,
                   selection = 'none',
@@ -512,7 +514,7 @@ server <- function(input, output, session) {
     }
   })
     #### --- IN TAB 3 --- ####
-    
+
     ##counting the rows in the input file or text
     file_row <- reactive({
       inFile <- input$file1
@@ -522,7 +524,7 @@ server <- function(input, output, session) {
         y <- merge(allgenes, tmp)
         return (list(length(unique(tmp$Gene)), length(unique(y$Gene))))
     })
-    
+
     ##textoutput of number of genes in list found in papers
     output$totalnrowfile <- renderText({
       #req(length(file_row) > 1)
@@ -533,29 +535,29 @@ server <- function(input, output, session) {
           paste0(file_row()[[2]], " (of your list of ", file_row()[[1]], ") genes are related to microglia or Alzheimer disease")
         }
     })
-    
-    
+
+
     ###upload file and compare to database
     output$tab3table <- DT::renderDataTable({
       # input$file1 will be NULL initially. After the user selects
       # and uploads a file, it will be a data frame.
       inFile <- input$file1
-      
+
       if (is.null(inFile)) {
         return(NULL)
       }
-        
+
       x <- read.csv(inFile$datapath, header=F)
       colnames(x) <- "Gene"
       x$Gene <- toupper(x$Gene)
-      y <- merge(allgenes, x, 
+      y <- merge(allgenes, x,
                  all.y = TRUE
       )
       y <- y[,1:4]
-      
+
       y$`Paper title`[is.na(y$`Paper title`)] <- "No known link"
       y[is.na(y)] <- ""
-      
+
       DT::datatable(data = y, rownames= FALSE,
                     escape = FALSE,
                     selection = 'none',
@@ -568,13 +570,12 @@ server <- function(input, output, session) {
                         "}")
                     )), dom='t',bPaginate=FALSE)
       )
-  
+
     })
 }
 
 
 
 
-# Run the application 
+# Run the application
 shinyApp(ui = ui, server = server)
-

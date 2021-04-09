@@ -3,7 +3,7 @@
 A fully cited RShiny app to indicate genes' significance in Alzheimer disease or in microglial cell identity, for potential targeting in therapies.
 
 To run:
-1. Clone this repo.
+1. Clone this repo
 2. In terminal, run `R` to open an R REPL, then run
 ```
 list <- c("shiny", "shinyjs", "DT", "fmsb", "gridExtra", "stringi", "dplyr", "ggplot2", "ggrepel")
@@ -14,10 +14,8 @@ for (i in 1:length(list)){
 3. Quit the REPL by running `q()` and pressing `n` followed by `enter`
 4. Run `R -e "shiny::runApp('./Microglia_AD_genes_apps.R')"`
 5. Terminal will print `Listening on ` followed by a url; enter that url into your browser
-
-DEMOS
-6. First tab (Dropdown list): select APOE from the dropdown list to see all available info about that crucial Alzheimer gene
-7. Second tab (Text input): copy & paste the genes in the file `dummy.tsv` to see the output from inputting a list of genes
+6. (The following instructions are to demo the app's functionality) First tab (Dropdown list): select APOE from the dropdown list to see all available info about that crucial Alzheimer gene
+7. Second tab (Text input): copy & paste the genes from the file `dummy.tsv` into the form to see the output from inputting a list of genes
 8. Third tab (File upload): upload `dummy.tsv` to see the output from uploading a file
 
 Screenshots
